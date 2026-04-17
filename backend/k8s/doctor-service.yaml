@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-service
+  namespace: mediconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doctor-service
+  template:
+    metadata:
+      labels:
+        app: doctor-service
+    spec:
+      containers:
+        - name: doctor-service
+          image: backend-doctor-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3004
+          envFrom:
+            - secretRef:
+                name: jwt-secret
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3004"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: MONGODB_URI_DOCTOR
+            - name: CONSUL_HOST
+              value: consul-service
+            - name: CONSUL_PORT
+              value: "8500"
+            - name: SERVICE_HOST
+              value: doctor-service
+            - name: PATIENT_SERVICE_URL
+              value: "http://patient-service:3003"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:3000"
+            - name: ADMIN_SERVICE_URL
+              value: "http://admin-service:3008"
+            - name: CLOUDINARY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: CLOUDINARY_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-service
+  namespace: mediconnect
+spec:
+  selector:
+    app: doctor-service
+  ports:
+    - name: http
+      port: 3004
+      targetPort: 3004
+  type: ClusterIP

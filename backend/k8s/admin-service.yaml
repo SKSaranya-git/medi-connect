@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+  namespace: mediconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      containers:
+        - name: admin-service
+          image: backend-admin-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3008
+          envFrom:
+            - secretRef:
+                name: jwt-secret
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3008"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: MONGODB_URI_ADMIN
+            - name: CONSUL_HOST
+              value: consul-service
+            - name: CONSUL_PORT
+              value: "8500"
+            - name: SERVICE_HOST
+              value: admin-service
+            - name: PATIENT_SERVICE_URL
+              value: "http://patient-service:3003"
+            - name: DOCTOR_SERVICE_URL
+              value: "http://doctor-service:3004"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:3000"
+            - name: PAYMENT_SERVICE_URL
+              value: "http://payment-service:3001"
+            - name: ADMIN_INVITE_CODE
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: ADMIN_INVITE_CODE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: mediconnect
+spec:
+  selector:
+    app: admin-service
+  ports:
+    - name: http
+      port: 3008
+      targetPort: 3008
+  type: ClusterIP

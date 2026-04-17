@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consul-service
+  namespace: mediconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul-service
+  template:
+    metadata:
+      labels:
+        app: consul-service
+    spec:
+      containers:
+        - name: consul-service
+          image: hashicorp/consul:1.19
+          args: ["agent", "-dev", "-ui", "-client=0.0.0.0"]
+          ports:
+            - containerPort: 8500
+              protocol: TCP
+            - containerPort: 8600
+              protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-service
+  namespace: mediconnect
+spec:
+  selector:
+    app: consul-service
+  ports:
+    - name: http
+      port: 8500
+      targetPort: 8500
+      protocol: TCP
+    - name: dns
+      port: 8600
+      targetPort: 8600
+      protocol: UDP
+  type: ClusterIP

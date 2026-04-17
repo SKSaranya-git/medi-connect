@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mediconnect
+resources:
+  - namespace.yaml
+  - mongodb.yaml
+  - consul-service.yaml
+  - appointment-service.yaml
+  - payment-service.yaml
+  - gatewayapi-service.yaml
+  - patient-service.yaml
+  - doctor-service.yaml
+  - telemedicine-service.yaml
+  - notification-service.yaml
+  - ai-symptom-service.yaml
+  - admin-service.yaml
+
+secretGenerator:
+  - name: jwt-secret
+    envs:
+      - .env.secret

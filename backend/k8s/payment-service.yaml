@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: mediconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: backend-payment-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - secretRef:
+                name: jwt-secret
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3001"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: MONGODB_URI_PAYMENT
+            - name: CONSUL_HOST
+              value: consul-service
+            - name: CONSUL_PORT
+              value: "8500"
+            - name: SERVICE_HOST
+              value: payment-service
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:3006"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:3000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: mediconnect
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - name: http
+      port: 3001
+      targetPort: 3001
+  type: ClusterIP

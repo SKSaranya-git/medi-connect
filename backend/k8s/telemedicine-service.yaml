@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemedicine-service
+  namespace: mediconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemedicine-service
+  template:
+    metadata:
+      labels:
+        app: telemedicine-service
+    spec:
+      containers:
+        - name: telemedicine-service
+          image: backend-telemedicine-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3005
+          envFrom:
+            - secretRef:
+                name: jwt-secret
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3005"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: MONGODB_URI_TELEMEDICINE
+            - name: CONSUL_HOST
+              value: consul-service
+            - name: CONSUL_PORT
+              value: "8500"
+            - name: SERVICE_HOST
+              value: telemedicine-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telemedicine-service
+  namespace: mediconnect
+spec:
+  selector:
+    app: telemedicine-service
+  ports:
+    - name: http
+      port: 3005
+      targetPort: 3005
+  type: ClusterIP

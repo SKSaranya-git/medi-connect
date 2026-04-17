@@ -1,0 +1,204 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mediconnect-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  consul-service:
+    image: hashicorp/consul:1.19
+    container_name: mediconnect-consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: ["agent", "-dev", "-ui", "-client=0.0.0.0"]
+    restart: unless-stopped
+
+  appointment-service:
+    build:
+      context: .
+      dockerfile: appointment-service/Dockerfile
+    container_name: mediconnect-appointment
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: appointment-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: mediconnect-payment
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: payment-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  gatewayapi-service:
+    build:
+      context: .
+      dockerfile: gatewayapi-service/Dockerfile
+    container_name: mediconnect-gateway
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: gatewayapi-service
+      APPOINTMENT_SERVICE_URL: http://appointment-service:3000
+      PAYMENT_SERVICE_URL: http://payment-service:3001
+      PATIENT_SERVICE_URL: http://patient-service:3003
+      DOCTOR_SERVICE_URL: http://doctor-service:3004
+      TELEMEDICINE_SERVICE_URL: http://telemedicine-service:3005
+      NOTIFICATION_SERVICE_URL: http://notification-service:3006
+      AI_SYMPTOM_SERVICE_URL: http://ai-symptom-service:3007
+      ADMIN_SERVICE_URL: http://admin-service:3008
+    ports:
+      - "3002:3002"
+    depends_on:
+      - consul-service
+      - appointment-service
+      - payment-service
+      - patient-service
+      - doctor-service
+      - telemedicine-service
+      - notification-service
+      - ai-symptom-service
+      - admin-service
+    restart: unless-stopped
+
+  patient-service:
+    build:
+      context: .
+      dockerfile: patient-service/Dockerfile
+    container_name: mediconnect-patient
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: patient-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  doctor-service:
+    build:
+      context: .
+      dockerfile: doctor-service/Dockerfile
+    container_name: mediconnect-doctor
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: doctor-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  telemedicine-service:
+    build:
+      context: .
+      dockerfile: telemedicine-service/Dockerfile
+    container_name: mediconnect-telemedicine
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: telemedicine-service
+    ports:
+      - "3005:3005"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: mediconnect-notification
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: notification-service
+    ports:
+      - "3006:3006"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+  ai-symptom-service:
+    build:
+      context: .
+      dockerfile: ai-symptom-service/Dockerfile
+    container_name: mediconnect-ai-symptom
+    environment:
+      NODE_ENV: production
+      PORT: 3007
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: ai-symptom-service
+    ports:
+      - "3007:3007"
+    depends_on:
+      - consul-service
+    restart: unless-stopped
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: admin-service/Dockerfile
+    container_name: mediconnect-admin
+    environment:
+      NODE_ENV: production
+      PORT: 3008
+      MONGODB_URI: mongodb://mongodb:27017/mediconnect
+      CONSUL_HOST: consul-service
+      CONSUL_PORT: 8500
+      SERVICE_HOST: admin-service
+    ports:
+      - "3008:3008"
+    depends_on:
+      - mongodb
+      - consul-service
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
