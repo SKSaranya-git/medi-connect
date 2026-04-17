@@ -202,6 +202,17 @@ const AppointmentPage = () => {
               <div className="mb-6 p-3.5 rounded-xl bg-[#f0f7fc] border border-[#c4dced] text-[13px] text-[#1a3a4a]">
                 Appointment Mode: <strong>{form.appointmentType === 'telemedicine' ? 'Telemedicine Session' : 'In-Person Session'}</strong>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="flex flex-col">
+                  <label className={labelCls}>Email Address</label>
+                  <input type="email" value={form.patientEmail} onChange={e => h('patientEmail', e.target.value)} className={inputCls} placeholder="john@example.com" />
+                </div>
+                <div className="flex flex-col">
+                  <label className={labelCls}>Mobile Number *</label>
+                  <input required type="tel" value={form.patientPhone} onChange={e => h('patientPhone', e.target.value)} className={inputCls} placeholder="0712345678" />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 <div className="flex flex-col">
                   <label className={labelCls}>NIC/Passport *</label>
