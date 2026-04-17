@@ -1,0 +1,20 @@
+{
+  "name": "ai-symptom-service",
+  "version": "1.0.0",
+  "description": "AI-Powered Symptom Checker Service for MediConnect",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "consul-service": "file:../consul-service",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
